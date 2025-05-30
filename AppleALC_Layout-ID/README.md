@@ -1,36 +1,40 @@
-# How to create/modify a Layout-ID for AppleALC
+# Como criar/modificar um Layout-ID para a AppleALC
 
-**TABLE of CONTENTS**
+**Conteúdos:**
 
-- [I. Summary](#i-summary)
-- [II. Preparations](#ii-preparations)
-- [III. Extracting data from the Codec dump](#iii-extracting-data-from-the-codec-dump)
-- [IV. Understanding the Codec schematic and signal flow](#iv-understanding-the-codec-schematic-and-signal-flow)
-- [V. Creating a PathMap](#v-creating-a-pathmap)
-- [VI. Creating a `PlatformsXX.xml`](#vi-creating-a-platformsxxxml)
-- [VII. Transferring the PathMap to `PlatformsXX.xml`](#vii-transferring-the-pathmap-to-platformsxxxml)
-- [VIII. Adding/Modifying `layoutXX.xml`](#viii-addingmodifying-layoutxxxml)
-- [IX. Creating a PinConfig](#ix-creating-a-pinconfig)
-- [X. Integrating the `PinConfig` into the AppleALC source code](#x-integrating-the-pinconfig-into-the-applealc-source-code)
-- [XI. Add `Platforms.xml` and `layout.xml` to `info.plist`](#xi-add-platformsxml-and-layoutxml-to-infoplist)
-- [XII. Compiling the AppleALC.kext](#xii-compiling-the-applealckext)
-- [XIII. Testing and Troubleshooting](#xiii-testing-and-troubleshooting)
-- [XIV. Adding your Layout-ID to the AppleALC Repo](#xiv-adding-your-layout-id-to-the-applealc-repo)
-- [Credits and Resources](#credits-and-resources)
+- [I. Sumário](#i-sumário)
+- [II. Preparação](#ii-preparations)
+- [III. Extraindo os dados do codec_dump](#iii-extracting-data-from-the-codec-dump)
+- [IV. Entendendo o esquema do codec e cadeia de sinal](#iv-understanding-the-codec-schematic-and-signal-flow)
+- [V. Criando um PathMap](#v-creating-a-pathmap)
+- [VI. Criando o `PlatformsXX.xml`](#vi-creating-a-platformsxxxml)
+- [VII. Transferindo o PathMap para o `PlatformsXX.xml`](#vii-transferring-the-pathmap-to-platformsxxxml)
+- [VIII. Adicionando/Modificando o `layoutXX.xml`](#viii-addingmodifying-layoutxxxml)
+- [IX. Criando o PinConfig](#ix-creating-a-pinconfig)
+- [X. Integrando `PinConfig` dentro do código fonte da AppleALC](#x-integrating-the-pinconfig-into-the-applealc-source-code)
+- [XI. Adicionando `Platforms.xml` e `layout.xml` dentro do `info.plist`](#xi-add-platformsxml-and-layoutxml-to-infoplist)
+- [XII. Compilando a AppleALC.kext](#xii-compiling-the-applealckext)
+- [XIII. Testes e Solução de problemas](#xiii-testing-and-troubleshooting)
+- [XIV. Adicionando seu Layout-ID no repositório oficial da AppleALC](#xiv-adding-your-layout-id-to-the-applealc-repo)
+- [Créditos e fontes](#credits-and-resources)
 
-## I. Summary
-### About
-This is my attempt to provide an up-to-date guide for creating/modifying Layout-IDs for the AppleALC kext to make audio work on a Hackintosh in 2022 (and beyond). It covers the following topics:
+## I. Sumário
+### Sobre
 
-- Installing and configuring the necessary tools
-- Creating a Codec dump in Linux
-- Converting the Data to visualize it
-- Creating a `PinConfig`, `Layout.xml` and `Platforms.xml` files
-- Integrating the data into the AppleALC Source Code 
-- Compiling the `AppleALC.kext`
-- Adding the newly created Layout-ID to the AppleALC repo
+Esta é a minha tentativa de disponibilizar um guia atualizado para criar ou modificar Layout-IDs para a kext AppleALC para resolver problemas de áudio em um Hackintosh em 2025. Serão abordados os seguintes tópicos:
 
-### Who this guide is for
+- Instalando e configurando as ferramentas necessárias
+- Criando um codec_dump no Linux
+- Convertendo a data para melhor visualização
+- Criando os arquivos `PinConfig`, `Layout.xml` e `Platforms.xml`
+- Integrando os dados dentro do código fonte da AppleALC 
+- Compiland a `AppleALC.kext`
+- Adicionando o novo Layout-ID ao repositório oficial da AppleALC.
+
+### Para quem é esse guia?
+
+Esse guia é destinado para usuários avançados que desejam criar um novo Layout-ID (baseado em um já existente) para o seu codec de áudio por diversas razões. Talvez o utilizado atualmente foi criado em um sistema diferente em uma placa mãe diferente, o que pode causar alguns problemas. Ou então os Layou-IDs disponíveis não suportam todas as entradas e saídas existentes.
+
 This guide is for advanced users who want to create a new Layout-ID (based on an existing one) for their Audio Codec for different reasons. Maybe the one in use was created for a different system/mainboard and causes issues or they want to add inputs and outputs missing from the current Layout-ID in use. This is usually the case when using Laptops with an additional Docking Stations where the Audio Jacks of the dock are not included in the Layout-ID so they won't work in macOS out of the box.
 
 <details>
