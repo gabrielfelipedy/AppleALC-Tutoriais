@@ -3,7 +3,7 @@
 **Conteúdos:**
 
 - [I. Sumário](#i-sumário)
-- [II. Preparação](#ii-preparations)
+- [II. Preparação](#ii-preparação)
 - [III. Extraindo os dados do codec_dump](#iii-extracting-data-from-the-codec-dump)
 - [IV. Entendendo o esquema do codec e cadeia de sinal](#iv-understanding-the-codec-schematic-and-signal-flow)
 - [V. Criando um PathMap](#v-creating-a-pathmap)
@@ -35,41 +35,33 @@ Esta é a minha tentativa de disponibilizar um guia atualizado para criar ou mod
 
 Esse guia é destinado para usuários avançados que desejam criar um novo Layout-ID (baseado em um já existente) para o seu codec de áudio por diversas razões. Talvez o utilizado atualmente foi criado em um sistema diferente em uma placa mãe diferente, o que pode causar alguns problemas. Ou então os Layou-IDs disponíveis não suportam todas as entradas e saídas existentes.
 
-This guide is for advanced users who want to create a new Layout-ID (based on an existing one) for their Audio Codec for different reasons. Maybe the one in use was created for a different system/mainboard and causes issues or they want to add inputs and outputs missing from the current Layout-ID in use. This is usually the case when using Laptops with an additional Docking Stations where the Audio Jacks of the dock are not included in the Layout-ID so they won't work in macOS out of the box.
 
-<details>
-<summary><strong>Why another guide?</strong> (click to reveal)</summary>
+### Você tem *certeza* que quer fazer isso?
 
-### Why another guide?
-Although the AppleALC kext comes with about 600 pre-configured Layout-IDs for more than 100 Audio Codecs, the process of *creating* or *modifying* a Layout-ID and integrating the data into the source code for compiling the kext is not documented on the AppleALC repo.
+Na perspectiva de um usuário, fazer o áudio funcionar em um hackintosh é trivial: basta adicionar `AppleALC.kext` na pasta `kexts` no seu bootloader (OpenCore ou Clover), setar o Layout-ID correto nos arquivos de configuração, e fazer o reboot. E violá! Som!. Porém, uma vez que você está no outro lado da moeda, tentando *criar* o seu próprio Layout-ID, é um história completamente diferente. Criar Audio Layouts para AppleALC é de longe uma das mais tediosas, complexas e frustantes tarefas em todo o universo hackintosh, e é quase uma certeza de que seu Layout-ID não funcionará na primeira tentaiva - Kernel Panics incluídos. Então, tenha certeza que quer realmente faze isso e esteja pronto! 
 
-The handful of guides I could find stem from an era before AppleALC even existed, when patching AppleHDA was still a thing. Most of them are either outdated (I had to use Wayback Machine for some), over-complicated or only parts of them are applicable today. And most importantly: ***none*** of them actually explain how to integrate the data into the AppleALC source code to compile the kext!
 
-The most convincing guide I did find is written in German by MacPeet. He has created over 50 (!) Layout-IDs for AppleALC over the years. It's from 2015 so it predates AppleALC as well. Although not all of its instructions are applicable today, his guide introduced a new, partly automated workflow, using tools to visualize the Codec dump and scripts to extract required data from it which previously had to be extracted manually.
-
-My guide is an adaptation of MacPeet's work but updates and enhances it, where possible. It introduces new tools and workflows and utilizes all the nice features markdown has to offer to present the instruction in the best way possible, such as: headings, syntax highlighting, tables and mermaid integration for flowcharts, etc.
-
-So all in all, there is a justification for having new guide for this to enable and empower users to create their own ALC Layout-IDs if they have to.</details>
-
-### Are you *sure*, you want to do this?
-From a user's perspective, making audio work in hackintosh is a no-brainer: add AppleALC to the kext folder of your Boot Manager, enter the correct ALC Layout-ID to the config and reboot. And voilà: Sound! But once you are on the other end, trying to actually *create* your own ALC Layout-ID it becomes a completely different story. Creating Audio Layouts for AppleALC is by far the most tedious, complex and frustrating undertaking in all of Hackintoshland and it's almost a given that your Layout-ID won't work the first time around – Kernel Panics included. So, are you sure you still *want* to do this?
-
-### 💡 Tips
-- Click on the little Header icon next to `README.md` to navigate in the document quickly
+### 💡 Dicas
+- Utilize o sumário para navegar rapidamente entre os conteúdos
 - [Backup files you change](https://github.com/5T33Z0/AppleALC-Guides/tree/main/File_Management) in the Source Code and document configuration changed! Otherwise you will completely lose track of PinConfig and PathMap combinations you have tried already! I prepared a [table for taking notes](https://github.com/5T33Z0/AppleALC-Guides/blob/main/AppleALC_Layout-ID/Testing_Notes.md) which might help. You can open it in a Markdown Editor such as Macdown or use Visual Studio Code.
 
-## II. Preparations
-Creating a Layout-ID for AppleALC is one of the more challenging tasks for "regular" hackintosh users who are not programmers (me included). It's not only challenging and time consuming, it's also confusing and requires a lot of tools and prep work. So let's get it out the way right away.
+## II. Preparação
 
-### Obtaining an Audio CODEC dump in Linux
-Unfortunately, Codec dumps obtained with Clover or OpenCore can't be processed by Codec Graph, the main tool for visualizing the data inside of them to create a map of an audio codec's routing. [**Core-i99**](https://github.com/Core-i99/Codec-Graph/) is working on a solution to make dumps obtained with OpenCore processable by Codec Graph. Until that's done, we still rely on Codec dumps created by Linux, which can be processed without issues.[^1]
+Criar um Layout-ID para AppleALC é uma das mais desafiados tarefas para usuários "regulares" de hackintosh que não são programadores. Caso você tenha um conhecimento básico de programação, será um grande auxílio nos processos apresentados a seguir.
 
-Therefore, we need to use (a live version of) Linux to create the codec dump without having to actually install Linux. We can use Ventoy for this. It prepares a USB flash drive which can run almost any ISO directly without having to create a USB installer.
 
-But before you dump the audio CODEC, verify that audio is working in Linus by playing back a YouTube video or something else that produces sound. You can check [here](https://linux-hardware.org/) whether other users have been able to get audio working under Linux on their system ([create a probe]([https://linux-hardware.org/?view=howto](https://linux-hardware.org/?view=howto)) to ensure your system matches the one in the database).
+### Obtendo um Audio CODEC dump no Linux
 
-#### Preparing a USB flash drive for running Linux live from an ISO
-Users who already have Linux installed can skip to [Dumping the Codec](#dumping-the-codec)!
+Infelizmente, codec dumps obtidos com o Clover ou OpenCore não conseguem ser processados pelo Codec Graph, a principal ferramenta para visualização dos dados. [**Core-i99**](https://github.com/Core-i99/Codec-Graph/) está trabalhando em uma solução para fazer com que dumps obtidos com o OpenCore possam ser processados pelo Codec Graph. Até isso estar pronto, precisaremos de um codec dump gerado por uma distro linux, que pode ser processada sem nenhum problema.[^1]
+
+Logo, precisaremos de uma versão portátil de uma distribuição linux para gerar o codec dump sem precisar realmente instalar um linux. Recomendo usar a distribuição Linux Mint, que é leve e pode ser usada com portátil sem problemas. Basta criar uma unidade USB bootável usando Ventoy, Balena Etcher ou qualquer outra ferramenta.
+
+
+IMPORTANTE: Antes de fazer o dump do seu codec, verifique se o áudio está realmente funcionando no seu Linux reproduzindo um vídeo no YouTube ou qualquer outra coisa que produza som. You can check [here](https://linux-hardware.org/) whether other users have been able to get audio working under Linux on their system ([create a probe]([https://linux-hardware.org/?view=howto](https://linux-hardware.org/?view=howto)) to ensure your system matches the one in the database).
+
+#### Preparando uma unidade USB para carregar o Linux (Ventoy)
+
+Usuários que já possuem o Linux pronto podem pular para [Dumping the Codec](#dumping-the-codec)!
 
 1. Use a USB 3.0 flash drive (at least 8 GB or more).
 2. In Windows, download [**Ventoy**](https://www.ventoy.net/en/download.html) and follow the [Instructions](https://www.ventoy.net/en/doc_start.html) to prepare the flash drive. 
@@ -81,16 +73,18 @@ Users who already have Linux installed can skip to [Dumping the Codec](#dumping-
 8. Once Ubuntu has reached the Desktop environment, select "Try Ubuntu" (or whatever the distro of your choice prompts).
 
 #### Dumping the Codec
-1. Once Linux is up and running, open Terminal and enter:</br>
+
+1. Com seu Linux rodando, cole o seguinte comando no terminal:</br>
 	```shell
 	cd ~/Desktop && mkdir CodecDump && for c in /proc/asound/card*/codec#*; do f="${c/\/*card/card}"; cat "$c" > CodecDump/${f//\//-}.txt; done && zip -r CodecDump.zip CodecDump
 	```
-2. Store the generated `CodecDump.zip` on a medium which you can access later from within macOS (HDD, other USB stick, E-Mail, Cloud). You cannot store it on the Ventoy drive itself, since it's formatted in ExFat and can't be accessed by Linux without installing additional utilities.
-3. Reboot into macOS.
-4. Extract `CodecDump.zip` to the Desktop. It contains a folder with one or more .txt files. We are only interested in `card1-codec#0.txt`, additional dumps are usually from HDMI audio devices of GPUs.
-5. ⚠️ Rename `card0-codec#0.txt` to `codec_dump.txt`. Otherwise the script we will use later to convert it will fail.
+2. Guarde o `CodecDump.zip` gerado em alguma unidade (SDD, outro USB, cloud) que você possa recupara depois logado no seu hackintosh. Você não conseguirá acessar os dados do pendrive bootável diretamente, por isso a importância desse passo.
+3. Reboot e entre no macOS.
+4. Extraia o diretório `CodecDump.zip` para o Desktop. Ele deve conter um diretório com um ou mais arquivos .txt. O que nos interessa é o arquivo `card1-codec#0.txt`, outros geralmente são relacionados a HDMI ou áudio de GPU's.
+5. ⚠️ Renomeie `card1-codec#0.txt` to `codec_dump.txt`. Caso contrário, os próximos passos poderão falhar.
 
 #### Working with Codec dumps obtained with Clover or OpenCore 
+
 If you can live without a schematic of the Codec, you *can* use the dumps created with Clover and OpenCore as well by following the instructions below.
 
 - **Clover**: 
@@ -101,13 +95,14 @@ If you can live without a schematic of the Codec, you *can* use the dumps create
 
 [^1]: When I compared the dumps obtained with Clover and Linux, I noticed that the one created in Linux contained almost twice the data (293 vs 172 lines). I guess this is because Linux dynamically discovers the paths of an audio codec through a graph traversal algorithm. And in cases where the algorithm fails, it uses a huge lookup table of patches specific to each Codec. My guess is that this additional data is captured by the Codec dump as well.
 
-### Required Tools and Files
-💡Please follow the instructions carefully and thoroughly to avoid issues.
+### Ferramentas e arquivo necessários
 
-- Follow the [**instructions**](https://github.com/5T33Z0/AppleALC-Guides/blob/main/AppleALC_Layout-ID/CodecGraph_Installation.md) to install Codec-Graph and convert your `codec-dump.txt` to `Codec-Dump.svg`.
-- Download and extract [**PinConfigurator**](https://github.com/headkaze/PinConfigurator/releases)
-- Download [**Hackintool**](https://github.com/headkaze/Hackintool). We may need it for Hex to Decimal conversions later.
-- Download and install the correct version of [**Xcode**](https://xcodereleases.com/?scope=release) for your system. The download is about 10 GB and the installed application is about 30 GB, so make sure you have enough disk space. Move the app to the "Programs" folder – otherwise compiling fails.
+💡Siga as instruções abaixo para continuar o processo:
+
+- Siga as [**instruções**](https://github.com/gabrielfelipedy/AppleALC-Guides/blob/main/AppleALC_Layout-ID/CodecGraph_Installation.md) para instalar o Codec-Graph e converter o `codec-dump.txt` para `Codec-Dump.png`.
+- Baixe e extraia [**PinConfigurator**](https://github.com/headkaze/PinConfigurator/releases)
+- Baixe [**Hackintool**](https://github.com/headkaze/Hackintool) para operações com bases numéricas hexadecimais e binárias.
+- Baixa versão correspondente do [**Xcode**](https://xcodereleases.com/?scope=release) para o seu sistema. O tamanho aproximado é de 10 GB e a aplicação instalada ocupa por volta de 30 GB, so make sure you have enough disk space. Move the app to the "Programs" folder – otherwise compiling fails.
 - Plist Editor like [**ProperTree**](https://github.com/corpnewt/ProperTree) or PlistEditPro (Xcode and [**Visual Studio Code**](https://code.visualstudio.com/) can open plists as well)
 
 ### Preparing the AppleALC Source Code
