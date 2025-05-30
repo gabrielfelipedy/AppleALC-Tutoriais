@@ -12,7 +12,7 @@ Este repositório contém tutorials para trabalhar com o código fonte da kext A
 
 ## Sumário
 
-- [Como criar/modificar um Layout-ID para a AppleALC](https://github.com/5T33Z0/AppleALC-Guides/tree/main/AppleALC_Layout-ID)
+- [Como criar/modificar um Layout-ID para a AppleALC](https://github.com/gabrielfelipedy/AppleALC-Tutoriais/tree/main/AppleALC_Layout-ID)
 - [AppleALC File Management](https://github.com/5T33Z0/AppleALC-Guides/tree/main/File_Management)
 - [Testing Notes Template](https://github.com/5T33Z0/AppleALC-Guides/blob/main/AppleALC_Layout-ID/Testing_Notes.md)
 - [Slimming and compiling the AppleALC kext](https://github.com/5T33Z0/AppleALC-Guides/tree/main/Slimming_AppleALC)
