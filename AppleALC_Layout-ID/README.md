@@ -4,7 +4,7 @@
 
 - [I. Sumário](#i-sumário)
 - [II. Preparação](#ii-preparação)
-- [III. Extraindo os dados do codec_dump](#iii-extracting-data-from-the-codec-dump)
+- [III. Extraindo os dados do codec_dump](#iii-extraindo-os-dados-do-codec-dump)
 - [IV. Entendendo o esquema do codec e cadeia de sinal](#iv-understanding-the-codec-schematic-and-signal-flow)
 - [V. Criando um PathMap](#v-creating-a-pathmap)
 - [VI. Criando o `PlatformsXX.xml`](#vi-creating-a-platformsxxxml)
@@ -102,30 +102,30 @@ If you can live without a schematic of the Codec, you *can* use the dumps create
 - Siga as [**instruções**](https://github.com/gabrielfelipedy/AppleALC-Guides/blob/main/AppleALC_Layout-ID/CodecGraph_Installation.md) para instalar o Codec-Graph e converter o `codec-dump.txt` para `Codec-Dump.png`.
 - Baixe e extraia [**PinConfigurator**](https://github.com/headkaze/PinConfigurator/releases)
 - Baixe [**Hackintool**](https://github.com/headkaze/Hackintool) para operações com bases numéricas hexadecimais e binárias.
-- Baixa versão correspondente do [**Xcode**](https://xcodereleases.com/?scope=release) para o seu sistema. O tamanho aproximado é de 10 GB e a aplicação instalada ocupa por volta de 30 GB, so make sure you have enough disk space. Move the app to the "Programs" folder – otherwise compiling fails.
-- Plist Editor like [**ProperTree**](https://github.com/corpnewt/ProperTree) or PlistEditPro (Xcode and [**Visual Studio Code**](https://code.visualstudio.com/) can open plists as well)
+- Baixa versão correspondente do [**Xcode**](https://xcodereleases.com/?scope=release) para o seu sistema. O tamanho aproximado é de 10 GB e a aplicação instalada ocupa por volta de 30 GB, garanta que você possui espaço em disco suficiente.
+- Um editor de Plist como [**ProperTree**](https://github.com/corpnewt/ProperTree) ou PlistEditPro (Xcode e [**Visual Studio Code**](https://code.visualstudio.com/) podem abrir arquivos .plist também)
 
-### Preparing the AppleALC Source Code
-- Clone, Fork or download (click on "Code" and "Download Zip") the [**AppleALC**](https://github.com/acidanthera/AppleALC) Source Code 
-- Download the Debug Version of [**Lilu Kext**](https://github.com/acidanthera/Lilu/releases) and copy it to the "AppleALC" root folder
-- In Terminal, enter: `cd`, hit space and drag and drop your AppleALC folder into the window and press enter.
-- Next, enter `git clone https://github.com/acidanthera/MacKernelSDK` and hit enter. This add the MacKernelSDK in the AppleALC source folder. The resulting folder structure should look like this:</br>![AALC_Dir](https://user-images.githubusercontent.com/76865553/173291777-9bc1285d-1ffa-479f-b7bf-b74cda6f23ae.png)
+### Obtendo o código fonte da AppleALC
 
-#### Files we have to work on
+- Faça o clone do repositória da [**AppleALC**](https://github.com/acidanthera/AppleALC).
+- Fça o download da versão debug da [**Lilu Kext**](https://github.com/acidanthera/Lilu/releases) e copie para o diretório da AppleALC
+- Dentro do diretório da AppleALC, abra um terminal e cole o comando `git clone https://github.com/acidanthera/MacKernelSDK` para baixar o MacKernelSDK
 
-|File             |Location            |Parameter(s)
+#### Arquivos de precisaremos mexer:
+
+|Arquivo             |Local            |Parâmetros
 -----------------|--------------------|----------
 `info.plist`      |AppleALC/Resources/PinConfigs.kext/Contents/Info.plists |PinConfig
 `PlatformsXX.xml` |AppleALC/Resources/subfolder for your Codec | PathMap
 `layoutXX.xml`    |AppleALC/Resources/subfolder for your Codec | Layout-ID and others
 `info.plist`      |AppleALC/Resources/subfolder for your Codec | PlatformsXX.xml.zlib </br> layoutXX.xml.zlib 
 
-`XX` = Number of the chosen Layout-ID.
+`XX` = Numéro do seu Layout-ID escolhido.
 
-### 💡 Tips for editing
+### 💡 Outras dicas
 
-- To avoid conflicts with the AppleALC repo when creating a Pull Request, it's best to clone the Repo locally to work on the files before integrating the data into the source code.
-- When integrating data into the source code, make sure to use Visual Studio Code or TextEdit to edit the files – especially when editing the `info.plist` inside `PinConfig.kext`. I have noticed that PlistEditoPro and even Xcode introduce changes in places you didn't even touch just by opening and saving the file. I've seen changes in the formatting as well as changes in ConfigData. This will introduce conflicts in the code when creating the Pull Request and it will be rejected.
+- Para evitar conflitos com o código original da AppleALC quando for criar o seu Pull Request, é melhor criar uma cópia do repositório baixado localmente e trbalhar nela.
+- Quando estiver editando os arquivos, use Visual Studio Code ou TextEdit para editar os arquivos - especialmente quando estiver editando o `info.plist` dentro de `PinConfig.kext`. I have noticed that PlistEditoPro and even Xcode introduce changes in places you didn't even touch just by opening and saving the file. I've seen changes in the formatting as well as changes in ConfigData. This will introduce conflicts in the code when creating the Pull Request and it will be rejected.
 - Add entries to both `info.plists` at the end of the corresponding sections to append lines to the source code only and not juggles lines around. The reduces chances of conflicts and makes the reviewing and merging process easier.
 - Finding "missing" platform.xml files: some Codec folders (e.g. ALC 887 and 17 others) contain less Platforms than layout xml files. If you can't find a Platforms file with the number corresponding to your layout xml, look for `PlatformsID.xml` instead. It can contain lots of pathmaps. Open the layout.xml file and check the `PathMapID`. Take a mental note of it or copy the number to the clipboard. Next, open `PlatformsID.xml` and find the PathMap with the corresponding ID.
 
@@ -141,83 +141,90 @@ If you can live without a schematic of the Codec, you *can* use the dumps create
 
 Now, that we've got the prep work out of the way, we can begin!
 
-## III. Extracting data from the Codec dump
-In order to route audio inputs and outputs for macOS, we need to analyze and work with data inside the Codec dump. To make the data easier to work with, we will use codec-graph to generate a schematic of the audio codec which makes routing audio much easier than working solely with the text file.
+## III. Extraindo os dados do Codec dump
 
-### Converting the Codec Dump
-- Follow the [**instructions**](https://github.com/5T33Z0/AppleALC-Guides/blob/main/AppleALC_Layout-ID/CodecGraph_Installation.md) to install Codec-Graph and convert your `codec-dump.txt` to `Codec-Dump.svg`.
-- Next, run **PinConfigurator**
-- Select "File > Open…" (⌘+O) and open "codec_dump.txt"
-- This will extract the available audio sources from the Codec dump
-- Select File > Export > **`verbs.txt`**. It will will be stored on the Desktop automatically. We may need it later.
+Para analisar as rotas de entrada e saída para o nosso áudio. Precisamos analisar e trabalhar com os dados gerados pelo codec dump. Para facilitar o processo, usaremos a ferramente Codec-Graph para gerar uma versão visual desses dados que tornará tudo mais fácil de interpretar.
 
-### Relevant Codec data
-Amongst other things, the Codec dump text contains the following details:
+### Convertendo o Codec Dump
+- Siga as [**instructions**](https://github.com/5T33Z0/AppleALC-Guides/blob/main/AppleALC_Layout-ID/CodecGraph_Installation.md) para instalar o Codec-Graph e converter o `codec-dump.txt` para `codec-dump.png`.
+- Após isso, execute o **PinConfigurator**
+- Selecione "File > Open…" (⌘+O) e abra o "codec_dump.txt"
+- Selecione File > Export > **`verbs.txt`**. Será salvo automaticamente no seu Desktop precisaremos desse arquivo mais tarde.
 
-- The Codec model
-- Its Address (usually `0`)
+### Dados relevantes do codec
+
+Entre outras coisas, o texto do codec dump contém as seguites informações:
+
+- Modelo do Codec
+- Seu endereço (normalmente `0`)
 - It's Vendor Id (in AppleALC it's used as `CodecID`)
-- Pin Complex Nodes with Control Names (these are eligible for the `PinConfig`)
-- The actual routing capabilities of the Codec:
+- Pin Complex Nodes com Control Names (esses serão usados no `PinConfig`)
+- As capacidades de rotas do codec:
 	- Pin Complex Nodes
 	- Mixer/Selector Nodes
 	- Audio Output Nodes
 	- Audio Input Nodes
 	- Number of connections from/to a Node/Mixer/Selector/Switch
 
-## IV. Understanding the Codec schematic and signal flow
-Shown below is `codecdumpdec.svg`, a visual representation of the data inside the codec dump for the **Realtek ALC269VC** used in my Laptop. It shows the routing capabilities of the Audio Codec. Depending on the Codec used in your system, the schematic will look different![^3]
+## IV. Entendo o Codec e sua cadeia de sinal
+
+Abaixo está o `codecdumpdec.svg`, representação visual do codec dump gerado para o codec **CONEXANT CX8400** presetente no meu computador. Ele mostra as capadidades de rota do codec. Dependendo do codec do seu sistema, essa imagem parecerá diferente[^3]
 
 ![codec_dump_dec](https://user-images.githubusercontent.com/76865553/170470041-6a872399-d75a-4145-b305-b66e242a1b47.svg)
 
 [^3]: This repo contains some more Codec dumps with schematics you can check out.
 
-Form/Color        | Function
+Formato/Cor| Função
 ------------------|-----------------------------------------------
-**Triangle**      | Amplifier
-**Blue Ellipse**  | Audio Output
-**Red Ellipse**   | Audio Input
-**Parallelogram** | Audio selector (this codec doesn't have any)
-**Hexagon**       | Audio mixer (with various connections 0, 1, 2,…)
-**Rectangle**     | Pin Complex Nodes representing audio sources we can select in system settings (Mic, Line-out, Headphone etc.)
-**Black Lines**   | Default connection (indicated by an asterisk in the Codec_Dump.txt)
-**Dotted Lines**  | Optional connection(s) a Node offers 
-**Blue Lines**    | Connections to the Outputs
+**Triângulo**      | Amplifier
+**Elipse azul**  | Audio Output
+**Elipse vermelha**   | Audio Input
+**Paralelogramo** | Audio selector (this codec doesn't have any)
+**Hexágono**       | Audio mixer (with various connections 0, 1, 2,…)
+**Retângulo**     | Pin Complex Nodes representing audio sources we can select in system settings (Mic, Line-out, Headphone etc.)
+**Linhas pretas**   | Default connection (indicated by an asterisk in the Codec_Dump.txt)
+**Linhas tracejadas**  | Optional connection(s) a Node offers 
+**Linhas azuis**    | Connections to the Outputs
 
 ### How to read the schematic
-⚠️ The schematic is a bit hard to comprehend and interpret because of its structure. It's also misleading: since all the arrows point to the right one might think they represent the signal flow – they don't. So ignore them! Instead, you need to take an approach which follows the signal flow.
 
-#### Routing Input Devices
-For **Input Devices**, start at the Input Node (red) and trace the route to the Pin Complex Node. 
+⚠️ O modelo é um pouco difícil de enteder por conta da sua estrutura. Ele é contraintuitivo, porque a direção das setas podem nos fazer pensar que elas representam a direção real do sinal - porém elas não o fazem. Então ignore isso
 
-- **Option 1**: Input &rarr; Mixer/Audio Selector &rarr; PinComplex Node:
+
+#### Routing dispositivos de entrada
+
+Para **dispositivos de entrada**, Comece no nó de Input (elipse vermelha) e termine a rota até o Pin Complex
+
+- **Opção 1**: Input &rarr; Mixer/Audio Selector &rarr; PinComplex Node:
 
 	```mermaid
 	flowchart LR
-		id1(((Input))) -->|Signal flow|id2{Mixer A} -->|Signal flow|id3(Pin Complex XY)
+		id1(((Input))) -->|fluxo de sinal|id2{Mixer A} -->|fluxo de sinal|id3(Pin Complex XY)
 		id4(((Input))) -->id5[/Audio Selector/]-->id6(Pin Complex XY)
 	```
-- **Option 2**: Input &rarr; PinComplex Node:
+- **Opção 2**: Input &rarr; PinComplex Node (conexão direta:
 
 	```mermaid
 		flowchart LR
-		id1(((Input))) ------>|Direct Connection|id3(Pin Complex XY)
+		id1(((Input))) ------>|Conexão direta|id3(Pin Complex XY)
 	```
-#### Routing Output Devices
-For **Output Devices**, start at the Pin Complex Node and follow the signal through Audio Mixer(s)/Selectors to the physical output.Here are some examples of possible routings.
+ 
+#### Routing dispositivos de saída
 
-- **Option 1**: Pin Complex Node &rarr; Mixer/Audio Selector &rarr; Output (common):
+Para **dispotivos de saída**, comece no Pin Complex Node e siga o fluxo de sinal através do Audio Mixer(s)/Selectors para o output. Aqui estão alguns exemplos de rotas possíveis.
+
+- **Opção 1**: Pin Complex Node &rarr; Mixer/Audio Selector &rarr; Output:
 
 	```mermaid
 	flowchart LR
-       id1(Pin Complex XY) -->|Signal flow|Aid2{Mixer A} -->|Signal flow|id5(((Output X)))
+       id1(Pin Complex XY) -->|fluxo de sinal|Aid2{Mixer A} -->|fluxo de sinal|id5(((Output X)))
        id3(Pin Complex XY)-->id2[/Audio Selector/]-->id6(((Output X)))
 	 ```
-- **Option 2**: Direct connection from Pin Complex Node to Output:
+- **Option 2**: Conexão direta do Pin Complex Node para o Output:
 
 	```mermaid
 	flowchart LR
-       id1(Pin Complex XY) ---->|Direct Connection|id5(((Output X)))
+       id1(Pin Complex XY) ---->|Conexão direta|id5(((Output X)))
 	```
 
 **NOTE**: Whether or not a signal traverses more than one Mixer Node depends on a Codec's design. What's important is to list all the "stations" a signal passes from the Pin Complex Node to the desired Output!
@@ -238,7 +245,8 @@ For **Output Devices**, start at the Pin Complex Node and follow the signal thro
     	id1(Node21: HP out) --> |possible path A| id3{Mixer 12} --> id5(((Output 2)))
     	id1(Node21: HP out) --> |possible path B| id4{Mixer 13} --> id6(((Output 3)))
 	```
-	**NOTE**: The number of possible paths depends on the number of connections a PinComplex Node provides. 
+	**NOTE**: The number of possible paths depends on the number of connections a PinComplex Node provides.
+  
 - **Internal Mic Input** (fixed/hardwired connection):
 
 	```mermaid
