@@ -2,7 +2,7 @@
 
 # AppleALC Tutoriais
 
-![codec_dump txt](https://user-images.githubusercontent.com/76865553/179084535-62f3634b-8e3e-4807-b0c1-bb04c035c5e0.svg)
+![Codec-Dump](https://github.com/user-attachments/assets/3fed8616-7dbc-4602-b948-48e6d7840bf2)
 
 ## Sobre
 
