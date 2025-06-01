@@ -5,7 +5,7 @@
 - [I. Sumário](#i-sumário)
 - [II. Preparação](#ii-preparação)
 - [III. Extraindo os dados do codec_dump](#iii-extraindo-os-dados-do-codec-dump)
-- [IV. Entendendo o esquema do codec e cadeia de sinal](#iv-understanding-the-codec-schematic-and-signal-flow)
+- [IV. Entendendo o codec e sua cadeia de sinal](#iv-entendendo-o-codec-e-sua-cadeia-de-sinal)
 - [V. Criando um PathMap](#v-creating-a-pathmap)
 - [VI. Criando o `PlatformsXX.xml`](#vi-creating-a-platformsxxxml)
 - [VII. Transferindo o PathMap para o `PlatformsXX.xml`](#vii-transferring-the-pathmap-to-platformsxxxml)
@@ -170,7 +170,7 @@ Entre outras coisas, o texto do codec dump contém as seguites informações:
 
 Abaixo está o `codecdumpdec.svg`, representação visual do codec dump gerado para o codec **CONEXANT CX8400** presetente no meu computador. Ele mostra as capadidades de rota do codec. Dependendo do codec do seu sistema, essa imagem parecerá diferente[^3]
 
-![codec_dump_dec](https://user-images.githubusercontent.com/76865553/170470041-6a872399-d75a-4145-b305-b66e242a1b47.svg)
+![Codec-Dump](https://github.com/user-attachments/assets/8a0b6918-a798-4c88-8059-b98724c92527)
 
 [^3]: This repo contains some more Codec dumps with schematics you can check out.
 
